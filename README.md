@@ -16,7 +16,7 @@ Solana meme-coin sepeti için **göreli güç rotasyon** botu. Felsefe: favori c
 - **Paper portföy:** localStorage üzerinde tutulur; dolum fiyatı = anlık fiyat + slippage payı + sabit ağ ücreti tahmini. PnL, günlük gerçekleşen kâr/zarar takibi.
 - **Canlı mod:** Açık onay gerektirir (mod geçişinde uyarı + her swap öncesi onay penceresi + kalıcı risk bandı). İşlem sonrası imza ve Solscan bağlantısı gösterilir.
 - **Risk ayarları:** Coin başına maksimum %, günlük zarar limiti, slippage (bps), paper başlangıç bakiyesi.
-- **Otomatik paper döngüsü (isteğe bağlı):** En güçlü öneriyi belirli aralıkla yalnızca paper modda uygular. Canlı işlemler asla otomatik yapılmaz; her canlı swap kullanıcı tıklaması ve cüzdan imzası ister.
+- **🤖 AI Otopilot:** Belirlediğiniz aralıkta piyasa + portföy görüntüsünü AI karar motoruna gönderir; ücret ve slippage maliyetini hesaba katarak AL / SAT / ROTASYON / BEKLE kararını kendisi verir ve paper portföyde anında uygular. Alt limit (stop) ve üst limit (kâr hedefi) koyarsınız: toplam değer bu sınırlara ulaşınca tüm pozisyonlar satılır ve otopilot durur. Canlı işlemler asla otomatik yapılmaz; her canlı swap kullanıcı tıklaması ve cüzdan imzası ister.
 - **Düzenlenebilir sepet:** Varsayılan tokenları kapatabilir, mint adresi ile yeni token ekleyebilirsiniz (decimals RPC üzerinden doğrulanır).
 
 ## Yerelde çalıştırma
@@ -45,8 +45,22 @@ npm run start
 | `NEXT_PUBLIC_SOLANA_RPC_URL` | `https://api.mainnet-beta.solana.com` | Solana RPC uç noktası. Public uç nokta hız limitlidir; üretimde Helius / Triton / QuickNode gibi bir sağlayıcı kullanın. |
 | `NEXT_PUBLIC_JUPITER_BASE_URL` | `https://lite-api.jup.ag` | Jupiter API taban adresi. Ücretsiz katman `lite-api.jup.ag`; API anahtarınız varsa `https://api.jup.ag` kullanabilirsiniz. |
 | `NEXT_PUBLIC_JUPITER_API_KEY` | boş | İsteğe bağlı Jupiter API anahtarı (`x-api-key` başlığı ile gönderilir). |
+| `XAI_API_KEY` | boş | İsteğe bağlı xAI (Grok) API anahtarı. Yalnızca sunucu tarafında (`/api/ai`) kullanılır, tarayıcıya asla gönderilmez. Ayarlanırsa otopilot kararlarını Grok LLM verir; yoksa yerleşik sezgisel motor devrededir. |
+| `AI_BASE_URL` | `https://api.x.ai/v1` | OpenAI uyumlu herhangi bir chat-completions uç noktası. |
+| `AI_MODEL` | `grok-4-fast` | Kullanılacak model adı. |
 
-Depoda hiçbir gizli bilgi (secret) tutulmaz; tüm değişkenler istemci tarafı ve isteğe bağlıdır.
+Depoda hiçbir gizli bilgi (secret) tutulmaz. `XAI_API_KEY` yalnızca sunucu ortam değişkenidir (`NEXT_PUBLIC_` öneki yoktur), istemciye sızmaz.
+
+## AI Otopilot nasıl karar verir?
+
+1. Her karar aralığında (varsayılan 45 sn) sepetin skor tablosu, açık pozisyonlar, nakit, risk ayarları ve limitler `/api/ai` uç noktasına gönderilir.
+2. `XAI_API_KEY` tanımlıysa karar Grok LLM'den istenir (katı JSON şeması ile). Anahtar yoksa, LLM hata verirse veya karar risk sınırlarını geçemezse **yerleşik sezgisel motor** devreye girer.
+3. Her karar sunucuda ve istemcide ayrıca doğrulanır: coin başına maksimum %, nakit bakiyesi ve minimum işlem tutarı aşılamaz.
+4. **Ücret farkındalığı:** İşlem yalnızca beklenen kenar (göreli güç farkı) gidiş-dönüş maliyetini (ağ ücreti + slippage payı) `min. kenar/maliyet` katsayısı kadar aşıyorsa yapılır; aksi halde BEKLE.
+5. **Alt/üst limit:** Toplam portföy değeri alt limite (stop) düşerse veya üst limite (hedef) ulaşırsa tüm pozisyonlar satılır ve otopilot kendini kapatır.
+6. Tüm kararlar gerekçesiyle birlikte panel içindeki günlüğe yazılır.
+
+Otopilot yalnızca **paper** modda işlem uygular. Canlı modda otomatik işlem güvenlik gereği devre dışıdır; her canlı swap kullanıcının tıklaması ve cüzdan imzası ile yapılır.
 
 ## Cüzdan güvenliği
 
