@@ -1,0 +1,64 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  @apply bg-ink-950 text-slate-200 antialiased;
+  background-image:
+    radial-gradient(1200px 500px at 80% -10%, rgba(139, 92, 246, 0.12), transparent),
+    radial-gradient(900px 400px at 10% -10%, rgba(34, 211, 238, 0.08), transparent);
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-thumb {
+  @apply rounded bg-ink-600;
+}
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+/* Wallet adapter button restyle */
+.wallet-adapter-button-trigger {
+  @apply !h-9 !rounded-lg !bg-accent !px-4 !text-sm !font-semibold;
+}
+.wallet-adapter-button-trigger:hover {
+  @apply !bg-violet-500;
+}
+.wallet-adapter-dropdown-list,
+.wallet-adapter-modal-wrapper {
+  @apply !bg-ink-850;
+}
+
+@layer components {
+  .card {
+    @apply rounded-xl border border-ink-700 bg-ink-900/80 shadow-lg shadow-black/20;
+  }
+  .card-title {
+    @apply text-sm font-semibold uppercase tracking-wider text-slate-400;
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-40;
+  }
+  .btn-primary {
+    @apply btn bg-accent text-white hover:bg-violet-500;
+  }
+  .btn-danger {
+    @apply btn bg-down/90 text-white hover:bg-red-500;
+  }
+  .btn-ghost {
+    @apply btn border border-ink-600 bg-transparent text-slate-300 hover:bg-ink-800;
+  }
+  .input {
+    @apply w-full rounded-lg border border-ink-600 bg-ink-800 px-3 py-1.5 text-sm text-slate-100 outline-none placeholder:text-slate-500 focus:border-accent;
+  }
+  .badge {
+    @apply inline-flex items-center rounded-md px-2 py-0.5 text-xs font-bold;
+  }
+}
