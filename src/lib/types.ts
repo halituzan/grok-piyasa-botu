@@ -80,9 +80,6 @@ export interface RiskSettings {
   slippageBps: number;
   /** Paper starting balance in USD. */
   startUsd: number;
-  /** Auto-execute top paper suggestion on an interval. Paper mode only. */
-  autoPaper: boolean;
-  autoIntervalSec: number;
 }
 
 export const DEFAULT_RISK: RiskSettings = {
@@ -90,6 +87,4 @@ export const DEFAULT_RISK: RiskSettings = {
   dailyLossLimitPct: 10,
   slippageBps: 100,
   startUsd: 50,
-  autoPaper: false,
-  autoIntervalSec: 60,
 };

@@ -89,47 +89,6 @@ export default function RiskSettingsPanel({ risk, onChange }: Props) {
           suffix="USD"
           onChange={(v) => onChange({ ...risk, startUsd: v })}
         />
-        <div className="col-span-2 flex items-center justify-between rounded-lg border border-ink-700 bg-ink-850 px-3 py-2.5">
-          <div>
-            <div className="text-sm font-semibold text-slate-200">Otomatik paper rotasyon</div>
-            <div className="text-[11px] text-slate-500">
-              En güçlü öneriyi belirli aralıkla paper modda uygular. Canlı işlemler asla
-              otomatik yapılmaz.
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            {risk.autoPaper && (
-              <input
-                className="input !w-16 text-center"
-                type="number"
-                min={15}
-                max={3600}
-                step={15}
-                value={risk.autoIntervalSec}
-                onChange={(e) => {
-                  const v = Number(e.target.value);
-                  if (Number.isFinite(v))
-                    onChange({ ...risk, autoIntervalSec: Math.min(3600, Math.max(15, v)) });
-                }}
-                title="Saniye"
-              />
-            )}
-            <button
-              role="switch"
-              aria-checked={risk.autoPaper}
-              onClick={() => onChange({ ...risk, autoPaper: !risk.autoPaper })}
-              className={`relative h-6 w-11 rounded-full transition-colors ${
-                risk.autoPaper ? 'bg-accent' : 'bg-ink-600'
-              }`}
-            >
-              <span
-                className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform ${
-                  risk.autoPaper ? 'translate-x-5' : 'translate-x-0.5'
-                }`}
-              />
-            </button>
-          </div>
-        </div>
       </div>
     </div>
   );

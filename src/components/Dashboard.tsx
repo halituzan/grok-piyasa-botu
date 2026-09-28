@@ -1,11 +1,13 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
+import { useAutopilot } from '@/hooks/useAutopilot';
 import { useBotState } from '@/hooks/useBotState';
 import { useMarketData } from '@/hooks/useMarketData';
-import { scoreBasket, topSuggestion } from '@/lib/rotation';
+import { scoreBasket } from '@/lib/rotation';
 import type { ScoredRow } from '@/lib/types';
 import ActionPanel, { type ActionSelection } from './ActionPanel';
+import AutopilotPanel from './AutopilotPanel';
 import BasketEditor from './BasketEditor';
 import BasketTable from './BasketTable';
 import Header from './Header';
@@ -57,48 +59,15 @@ export default function Dashboard() {
     });
   };
 
-  // Auto paper loop: applies the top suggestion on an interval. Paper only.
-  const autoRef = useRef({ bot, scored, prices });
-  autoRef.current = { bot, scored, prices };
-
-  useEffect(() => {
-    if (!bot.risk.autoPaper || bot.mode !== 'paper') return;
-    const id = setInterval(() => {
-      const { bot: b, scored: s, prices: p } = autoRef.current;
-      if (b.mode !== 'paper' || s.length === 0) return;
-      const pick = topSuggestion(s);
-      if (!pick) return;
-      const equity = b.paper.cashUsd; // sizing base: available cash for buys
-      if (pick.action === 'AL') {
-        const usd = Math.min(equity, Math.max(5, equity * (b.risk.maxPctPerCoin / 100)));
-        if (usd >= 1) {
-          b.runPaperTrade({
-            kind: 'buy',
-            mint: pick.mint,
-            symbol: pick.symbol,
-            usd,
-            prices: p,
-          });
-        }
-      } else if (pick.action === 'SAT' || pick.action === 'ROTASYON') {
-        const pos = b.paper.positions[pick.mint];
-        const price = p.get(pick.mint);
-        if (!pos || !price) return;
-        const usd = pos.qty * price;
-        if (usd < 0.5) return;
-        b.runPaperTrade({
-          kind: pick.action === 'SAT' ? 'sell' : 'rotate',
-          mint: pick.mint,
-          symbol: pick.symbol,
-          toMint: pick.rotateTargetMint,
-          toSymbol: pick.rotateTargetSymbol,
-          usd,
-          prices: p,
-        });
-      }
-    }, bot.risk.autoIntervalSec * 1000);
-    return () => clearInterval(id);
-  }, [bot.risk.autoPaper, bot.risk.autoIntervalSec, bot.mode]);
+  // AI Otopilot: kararları /api/ai üzerinden alır, paper modda otomatik uygular.
+  const autopilot = useAutopilot({
+    mode: bot.mode,
+    scored,
+    prices,
+    paper: bot.paper,
+    risk: bot.risk,
+    runPaperTrade: bot.runPaperTrade,
+  });
 
   if (!bot.hydrated) {
     return (
@@ -129,6 +98,7 @@ export default function Dashboard() {
         </div>
 
         <div className="space-y-4">
+          <AutopilotPanel autopilot={autopilot} mode={bot.mode} />
           <ActionPanel
             mode={bot.mode}
             basket={bot.basket}
